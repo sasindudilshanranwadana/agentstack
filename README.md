@@ -34,11 +34,18 @@
 
 ---
 
-One repo, one wizard. Choose the components you want, wire in **your own** API
-keys, and get a running stack with **Hermes as the orchestrator** — backed by an
-LLM gateway ([OmniRoute](CREDITS.md)), shared memory ([mem0](CREDITS.md)), a tool
-pool (MCP), local inference, and monitoring. Runs on **Linux, macOS, and
-Windows** (Docker required).
+## What is agentstack
+
+Self-hosting a capable AI agent usually means stitching together disconnected
+services, API keys, containers, and config by hand — and getting those pieces to
+cooperate often takes more effort than using the agent itself.
+
+agentstack folds that into **one repo and one wizard**. Pick the components you
+want, bring your **own** keys, and get a running Docker Compose stack with
+**Hermes orchestrating** the work — an LLM gateway ([OmniRoute](CREDITS.md)),
+shared memory ([mem0](CREDITS.md)), an MCP tool pool, local inference, ingress,
+and monitoring. Runs on **Linux, macOS, and Windows** (Docker required); your
+keys live only in a local, git-ignored `.env`.
 
 > agentstack is **orchestration glue**. Every bundled tool is the work of its
 > original authors — see [CREDITS.md](CREDITS.md) and
@@ -58,26 +65,56 @@ The wizard walks you through: **pick components → consent for anything
 privileged → choose integrations → enter your keys** (written only to a local,
 git-ignored `.env`) → it brings up exactly what you selected.
 
-## The stack at a glance
+## How it works
 
-Real tools, your choice — Hermes orchestrates, and you pick what you want in the
-wizard. These are the real brand marks wherever one exists. **OpenAI** and
-**Slack** use a monogram (their marks are trademark-restricted), and **Hermes**,
-**OmniRoute**, **Headroom** and **host-gateway** have no official logo — Hermes
-carries a purpose-drawn orchestrator emblem.
+One task in, and the stack coordinates around it — your agent or channel hands
+Hermes a task, Hermes plans it and calls the model through OmniRoute, and the
+support services kick in as needed:
 
 <div align="center">
-<img src="assets/stack.svg" alt="agentstack component gallery with tool logos, grouped by tier" width="100%">
+<img src="assets/how-it-works.svg" alt="agentstack request flow — your agent to Hermes to OmniRoute to a provider, with mem0 memory, MCP tools, local inference, ingress and monitoring" width="100%">
 </div>
+
+You send a task from a channel or coding agent. Hermes receives it, decides which
+model and tools fit the request, and coordinates the steps. For model calls it
+uses **OmniRoute** — a single gateway that routes across supported providers,
+stacks available free tiers, and falls back when a route is unavailable. You
+bring the provider keys, and they stay in your local `.env`.
+
+While working, Hermes can use **mem0** to carry memory between sessions and an
+**MCP tool pool** to reach services such as GitHub, Playwright, Context7, Docker,
+or Postgres. **Local inference** is optional — Ollama serves local models, with
+Open WebUI to manage them. **Nginx Proxy Manager** provides public ingress and
+TLS; **Netdata + Diun** handle monitoring and image-update alerts. The wizard
+lets you choose which pieces you want, and Docker Compose runs them together.
+
+## Why agentstack (and the trade-offs)
+
+| Strengths | Trade-offs |
+| --- | --- |
+| You own the deployment and its data. | Docker is required, and you run, secure, and pay for the infrastructure yourself. |
+| OmniRoute makes the model layer provider-agnostic, with tier routing and fallback. | Provider access and free tiers depend on the providers; you supply and manage the keys. |
+| A modular wizard lets you select only the services you need. | More components mean more configuration, updates, and operational responsibility. |
+| mem0 shares memory across sessions; MCP opens a broad tool ecosystem. | The tools you connect have their own permissions and security implications. |
+| Runs wherever Docker runs — self-hosted machines and servers alike. | Local inference benefits from a capable machine, especially for larger models. |
+| Open components and an adaptable stack. | This is orchestration glue, not a managed product; upstream licenses vary. |
+
+> **Security note:** `host-gateway` is an opt-in path to privileged host access.
+> It is powerful and is **not** a sandbox — only enable it for agents and tools
+> you trust as much as yourself.
 
 ## Architecture
 
-How it fits together — providers flow into OmniRoute, Hermes orchestrates, mem0
-remembers, and your selected tools hang off the shared network:
+<details>
+<summary><b>Full component map</b> — every tier, port, and wizard step (click to expand)</summary>
+
+<br/>
 
 <div align="center">
 <img src="docs/architecture.png" alt="agentstack architecture — Hermes orchestrating OmniRoute, mem0, MCP, inference, ingress and monitoring across tiers" width="100%">
 </div>
+
+</details>
 
 ## Components
 
