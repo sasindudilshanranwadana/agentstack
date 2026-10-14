@@ -22,7 +22,9 @@ from wizard.integrations import INGRESS, NOTIFICATIONS, PROVIDERS
 from wizard.plan import build_install_plan
 from wizard.preflight import detect_platform, preflight
 
-REPO = Path(__file__).resolve().parent.parent
+# The repo root the wizard operates on. Defaults to this checkout; the native
+# bootstrapper sets AGENTSTACK_REPO so a frozen build can drive a downloaded one.
+REPO = Path(os.environ.get("AGENTSTACK_REPO") or Path(__file__).resolve().parent.parent)
 
 # ---- terminal styling (ANSI, only emitted to a real TTY) ----
 _TTY = sys.stdout.isatty()

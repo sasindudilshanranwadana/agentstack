@@ -36,7 +36,25 @@ keys live only in a local, git-ignored `.env`.
 > [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). This is not an official
 > distribution of any of them.
 
-## Quick start
+## Install
+
+The only prerequisite is **Docker** (Desktop on macOS/Windows, Engine on Linux).
+Both paths below drop you into the same wizard.
+
+### Option A — native installer (no Git, no Python)
+
+Grab the build for your OS from the
+[**Releases**](https://github.com/sasindudilshanranwadana/agentstack/releases)
+page and run it. It bundles its own Python, checks Docker, downloads agentstack,
+runs the wizard, and offers to bring the stack up.
+
+| OS | File | How to run |
+|----|------|------------|
+| **Windows** | `agentstack-setup-windows-x86_64.exe` | double-click (on SmartScreen → *More info → Run anyway*) |
+| **macOS** | `agentstack-setup-macos.dmg` | open the `.dmg`, then right-click → *Open* (unsigned build) |
+| **Linux** | `agentstack-setup-linux-x86_64.tar.gz` | `tar xzf *.tar.gz && ./agentstack-setup` |
+
+### Option B — from source (Git)
 
 ```bash
 git clone https://github.com/sasindudilshanranwadana/agentstack
@@ -45,9 +63,9 @@ cd agentstack
 #  .\install.ps1      # Windows (PowerShell)
 ```
 
-The wizard walks you through: **pick components → consent for anything
-privileged → choose integrations → enter your keys** (written only to a local,
-git-ignored `.env`) → it brings up exactly what you selected.
+Either way, the wizard walks you through: **pick components → consent for
+anything privileged → choose integrations → enter your keys** (written only to a
+local, git-ignored `.env`) → it brings up exactly what you selected.
 
 ## How it works
 

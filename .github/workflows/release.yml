@@ -1,0 +1,76 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  installers:
+    name: build installer (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PyInstaller
+        run: python -m pip install --upgrade pip pyinstaller
+
+      - name: Build bootstrapper
+        run: pyinstaller installer/agentstack-setup.spec
+
+      - name: Package — Linux tarball
+        if: runner.os == 'Linux'
+        run: |
+          cd dist
+          tar -czf agentstack-setup-linux-x86_64.tar.gz agentstack-setup
+
+      - name: Package — Windows exe
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Rename-Item dist/agentstack-setup.exe agentstack-setup-windows-x86_64.exe
+
+      - name: Package — macOS dmg
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p dmgroot
+          cp dist/agentstack-setup dmgroot/agentstack-setup
+          printf '%s\n' \
+            'agentstack setup' \
+            '' \
+            'Double-click agentstack-setup to install.' \
+            'First run: right-click the binary and choose Open (unsigned build).' \
+            'You only need Docker Desktop installed beforehand.' \
+            > dmgroot/README.txt
+          hdiutil create -volname "agentstack setup" -srcfolder dmgroot \
+            -ov -format UDZO dist/agentstack-setup-macos.dmg
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: agentstack-setup-${{ matrix.os }}
+          path: |
+            dist/*.tar.gz
+            dist/*.exe
+            dist/*.dmg
+          if-no-files-found: ignore
+
+      - name: Attach to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.tar.gz
+            dist/*.exe
+            dist/*.dmg
+          fail_on_unmatched_files: false
