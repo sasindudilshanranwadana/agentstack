@@ -1,0 +1,27 @@
+name: mcp
+
+# MCP tool pool — the standing Model Context Protocol servers the agent uses as
+# tools. github + playwright ship here (public images). graphify and other MCP
+# servers can be added; see README.md.
+
+services:
+  github-mcp:
+    image: ghcr.io/github/github-mcp-server:latest
+    container_name: github-mcp
+    restart: unless-stopped
+    environment:
+      GITHUB_PERSONAL_ACCESS_TOKEN: ${GITHUB_TOKEN:-}
+    networks:
+      - agentstack
+
+  playwright-mcp:
+    image: mcr.microsoft.com/playwright/mcp:latest
+    container_name: playwright-mcp
+    restart: unless-stopped
+    networks:
+      - agentstack
+
+networks:
+  agentstack:
+    external: true
+    name: agentstack

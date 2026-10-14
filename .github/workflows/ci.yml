@@ -1,0 +1,63 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install test deps
+        run: pip install pytest
+      - name: Run tests (wizard logic + compose validation + sanitization)
+        run: python -m pytest -q
+
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: ShellCheck
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y shellcheck
+          shellcheck install.sh scripts/*.sh
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  credits-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Credits gate (warn on branches, BLOCK on release tags)
+        run: |
+          python - <<'PY'
+          import os, sys
+          from wizard.credits import unverified_credits
+          bad = unverified_credits()
+          is_release = os.environ.get("GITHUB_REF_TYPE") == "tag"
+          if not bad:
+              print("all upstream licenses verified")
+          elif is_release:
+              print("::error::release blocked — unverified upstream licenses: " + ", ".join(bad))
+              sys.exit(1)
+          else:
+              print("::warning::unverified upstream licenses: " + ", ".join(bad))
+          PY

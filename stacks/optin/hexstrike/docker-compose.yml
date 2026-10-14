@@ -1,0 +1,27 @@
+name: hexstrike
+
+# ⚠️  OPT-IN. HexStrike AI is an offensive/defensive security tooling MCP
+# server (large toolset). OFF by default; the wizard requires explicit consent.
+# Intended for authorized pentesting, CTF, and security research only.
+#
+# Builds from the upstream HexStrike AI source fetched into ${HEXSTRIKE_SRC}.
+# See README.md for credit.
+
+services:
+  hexstrike:
+    build:
+      context: ${HEXSTRIKE_SRC:-./vendor/hexstrike-ai}
+    image: agentstack/hexstrike:local
+    container_name: hexstrike
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-UTC}
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:8899:8899"
+    networks:
+      - agentstack
+
+networks:
+  agentstack:
+    external: true
+    name: agentstack

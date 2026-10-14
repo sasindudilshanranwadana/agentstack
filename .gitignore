@@ -1,0 +1,17 @@
+.env
+*.env
+!*.env.example
+__pycache__/
+*.pyc
+.pytest_cache/
+data/
+secrets/
+redis-data/
+.venv/
+.superpowers/
+
+# Internal planning artifacts (not shipped publicly)
+docs/superpowers/
+
+# Owner-specific private sanitization markers (never ship these names publicly)
+tests/private-markers.txt

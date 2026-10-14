@@ -1,0 +1,29 @@
+name: ingress
+
+# Ingress — public HTTP(S) entry with a UI for proxy hosts and Let's Encrypt
+# TLS. Upstream image: jc21/nginx-proxy-manager (public). See README.md.
+#
+# 80/443 bind to ${INGRESS_BIND:-0.0.0.0} (this is the intended public entry);
+# the admin UI (81) binds to ${BIND_ADDR:-127.0.0.1} (localhost only).
+
+services:
+  npm:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: npm
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-UTC}
+    ports:
+      - "${INGRESS_BIND:-0.0.0.0}:80:80"
+      - "${INGRESS_BIND:-0.0.0.0}:443:443"
+      - "${BIND_ADDR:-127.0.0.1}:81:81"
+    volumes:
+      - ${AGENTSTACK_DATA:-./data}/npm/data:/data
+      - ${AGENTSTACK_DATA:-./data}/npm/letsencrypt:/etc/letsencrypt
+    networks:
+      - agentstack
+
+networks:
+  agentstack:
+    external: true
+    name: agentstack

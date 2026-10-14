@@ -1,0 +1,73 @@
+name: omniroute
+
+# OmniRoute — the LLM gateway. One endpoint, any provider.
+# Upstream image: diegosouzapw/omniroute (public). See README.md for credit.
+# An optional locally-built hardened variant is available via
+# scripts/hardened-build.sh; this module uses the upstream image by default.
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: omniroute-redis
+    restart: unless-stopped
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+    volumes:
+      - ${AGENTSTACK_DATA:-./data}/omniroute/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    networks:
+      - omniroute-internal
+
+  omniroute:
+    image: diegosouzapw/omniroute:latest
+    container_name: omniroute
+    restart: unless-stopped
+    stop_grace_period: 40s
+    environment:
+      TZ: ${TZ:-UTC}
+      DATA_DIR: /app/data
+      PORT: "20128"
+      DASHBOARD_PORT: "20128"
+      API_PORT: "20129"
+      API_HOST: 0.0.0.0
+      LIVE_WS_PORT: "20132"
+      LIVE_WS_HOST: 0.0.0.0
+      LIVE_WS_ALLOWED_ORIGINS: http://${PUBLIC_HOST:-localhost}:20128
+      LIVE_WS_ALLOWED_HOSTS: ${PUBLIC_HOST:-localhost}
+      NEXT_PUBLIC_BASE_URL: http://${PUBLIC_HOST:-localhost}:20128
+      NEXT_PUBLIC_LIVE_WS_PUBLIC_URL: ws://${PUBLIC_HOST:-localhost}:20132/live-ws
+      OMNIROUTE_BASE_URL: http://127.0.0.1:20128
+      BASE_URL: http://127.0.0.1:20128
+      REDIS_URL: redis://redis:6379
+      REDIS_KEY_PREFIX: "omniroute:"
+      # Provider keys and management/service tokens are supplied via .env
+      # (see .env.example). Empty defaults keep `compose config` valid.
+      OMNIROUTE_API_KEY: ${OMNIROUTE_API_KEY:-}
+      OMNIROUTE_MGMT_API_KEY: ${OMNIROUTE_MGMT_API_KEY:-}
+      OMNIROUTE_INTERNAL_SERVICE_TOKEN: ${OMNIROUTE_INTERNAL_SERVICE_TOKEN:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:20128:20128"
+      - "${BIND_ADDR:-127.0.0.1}:20129:20129"
+      - "${BIND_ADDR:-127.0.0.1}:20132:20132"
+    volumes:
+      - ${AGENTSTACK_DATA:-./data}/omniroute:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - omniroute-internal
+      - agentstack
+
+networks:
+  omniroute-internal:
+    internal: true
+  agentstack:
+    external: true
+    name: agentstack

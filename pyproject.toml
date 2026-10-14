@@ -1,0 +1,11 @@
+[project]
+name = "agentstack-wizard"
+version = "0.1.0"
+description = "agentstack install wizard — self-hosted Hermes agent + AI infrastructure"
+requires-python = ">=3.10"
+authors = [{ name = "Sasindu Dilshan Ranwadana" }]
+license = { text = "MIT" }
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

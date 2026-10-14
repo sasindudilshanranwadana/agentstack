@@ -1,0 +1,50 @@
+name: monitoring
+
+# Monitoring — Netdata for live metrics/health, Diun to notify when a container
+# image has an update. Both public images. See README.md for credit.
+
+services:
+  netdata:
+    image: netdata/netdata:latest
+    container_name: netdata
+    restart: unless-stopped
+    hostname: agentstack
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - apparmor:unconfined
+    environment:
+      TZ: ${TZ:-UTC}
+    volumes:
+      - ${AGENTSTACK_DATA:-./data}/netdata/config:/etc/netdata
+      - ${AGENTSTACK_DATA:-./data}/netdata/lib:/var/lib/netdata
+      - ${AGENTSTACK_DATA:-./data}/netdata/cache:/var/cache/netdata
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc/os-release:/host/etc/os-release:ro
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:19999:19999"
+    networks:
+      - agentstack
+
+  diun:
+    image: crazymax/diun:latest
+    container_name: diun
+    restart: unless-stopped
+    command: serve
+    environment:
+      TZ: ${TZ:-UTC}
+      DIUN_WATCH_SCHEDULE: "0 */6 * * *"
+      DIUN_PROVIDERS_DOCKER: "true"
+      # The wizard wires a notification channel (Telegram/Discord/Slack/email)
+      # into Diun's notif settings via .env.
+    volumes:
+      - ${AGENTSTACK_DATA:-./data}/diun:/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - agentstack
+
+networks:
+  agentstack:
+    external: true
+    name: agentstack

@@ -1,0 +1,84 @@
+name: mem0
+
+# mem0 — the shared memory layer. API on :8888, dashboard on :3000, backed by
+# a pgvector Postgres. The mem0 api/dashboard build from the upstream mem0
+# source (Apache-2.0); the installer fetches it into ${MEM0_SRC} (default
+# ./vendor/mem0). See README.md for upstream credit.
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: mem0-postgres
+    restart: unless-stopped
+    shm_size: "128mb"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${MEM0_POSTGRES_PASSWORD:?set MEM0_POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -q -d postgres -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ${AGENTSTACK_DATA:-./data}/mem0/postgres:/var/lib/postgresql/data
+    networks:
+      - mem0-internal
+
+  mem0-api:
+    build:
+      context: ${MEM0_SRC:-./vendor/mem0}
+      dockerfile: server/Dockerfile
+    image: agentstack/mem0-api:local
+    container_name: mem0-api
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-UTC}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${MEM0_POSTGRES_PASSWORD:-}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      APP_DB_NAME: mem0_app
+      AUTH_DISABLED: ${MEM0_AUTH_DISABLED:-false}
+      MEM0_TELEMETRY: "false"
+      JWT_SECRET: ${MEM0_JWT_SECRET:-}
+      ADMIN_API_KEY: ${MEM0_ADMIN_API_KEY:-}
+      # mem0 can route its own LLM/embedding calls through omniroute.
+      OPENAI_BASE_URL: ${MEM0_OPENAI_BASE_URL:-http://omniroute:20129/v1}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      DASHBOARD_URL: http://${PUBLIC_HOST:-localhost}:3000
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:8888:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - mem0-internal
+      - agentstack
+
+  mem0-dashboard:
+    build:
+      context: ${MEM0_SRC:-./vendor/mem0}/server/dashboard
+    image: agentstack/mem0-dashboard:local
+    container_name: mem0-dashboard
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: http://${PUBLIC_HOST:-localhost}:8888
+      API_INTERNAL_URL: http://mem0-api:8000
+      NEXT_PUBLIC_INSTANCE_NAME: Mem0
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:3000:3000"
+    depends_on:
+      mem0-api:
+        condition: service_started
+    networks:
+      - mem0-internal
+      - agentstack
+
+networks:
+  mem0-internal:
+    internal: true
+  agentstack:
+    external: true
+    name: agentstack

@@ -1,0 +1,33 @@
+name: headroom
+
+# Headroom — context compression in front of the LLM gateway, keeping long
+# agent sessions cheap. Upstream image: ghcr.io/headroomlabs-ai/headroom
+# (public). See README.md for credit.
+
+services:
+  headroom:
+    image: ghcr.io/headroomlabs-ai/headroom:latest
+    container_name: headroom
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-UTC}
+      HEADROOM_PORT: "8787"
+      HEADROOM_HOST: 0.0.0.0
+      HEADROOM_MEMORY_ENABLED: "1"
+      HEADROOM_TELEMETRY: "0"
+      HOME: /tmp/headroom-home
+      HEADROOM_WORKSPACE_DIR: /tmp/headroom-home/.headroom
+      HEADROOM_CONFIG_DIR: /tmp/headroom-home/.headroom/config
+      # Compress context in front of the stack's LLM gateway.
+      ANTHROPIC_BASE_URL: ${OMNIROUTE_BASE_URL:-http://omniroute:20129}
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:8787:8787"
+    volumes:
+      - ${AGENTSTACK_DATA:-./data}/headroom:/tmp/headroom-home/.headroom
+    networks:
+      - agentstack
+
+networks:
+  agentstack:
+    external: true
+    name: agentstack

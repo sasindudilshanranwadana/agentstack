@@ -1,0 +1,26 @@
+version: 2
+updates:
+  # Keep the base images in every stack module current.
+  - package-ecosystem: docker
+    directories:
+      - "/stacks/**"
+    schedule:
+      interval: weekly
+    groups:
+      docker-minor-patch:
+        update-types: ["minor", "patch"]
+    labels: ["dependencies", "docker"]
+
+  # Wizard Python deps (if/when any are pinned).
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+    labels: ["dependencies", "python"]
+
+  # The CI workflows themselves.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    labels: ["dependencies", "ci"]

@@ -1,0 +1,50 @@
+name: hermes
+
+# Hermes Agent — the orchestrator ("the boss"). Upstream image:
+# nousresearch/hermes-agent (public). See README.md for credit.
+#
+# This is a CLEAN, PORTABLE deployment: bridge networking + published dashboard
+# port (no host networking), a configurable data dir (no personal host paths),
+# and no docker.sock (host access is the separate, opt-in host-gateway module).
+
+services:
+  gateway:
+    image: nousresearch/hermes-agent:latest
+    container_name: hermes-gateway
+    restart: unless-stopped
+    # The image entrypoint runs an always-on internal gateway (+ dashboard when
+    # HERMES_DASHBOARD=1) via s6. The container needs an inert, long-lived
+    # foreground command so it stays up instead of dropping into the interactive
+    # REPL (which exits with no TTY). This is the upstream-supported pattern.
+    command: ["tail", "-f", "/dev/null"]
+    stop_grace_period: 45s
+    environment:
+      TZ: ${TZ:-UTC}
+      S6_KILL_GRACETIME: "30000"
+      HERMES_UID: "10000"
+      HERMES_GID: "10000"
+      HERMES_SUPERVISED_CHILD: "1"
+      HERMES_DASHBOARD: "1"
+      HERMES_DASHBOARD_HOST: "0.0.0.0"
+      HERMES_DASHBOARD_PORT: "9119"
+      # Hermes reaches the stack's LLM gateway and memory by service name on
+      # the shared agentstack network.
+      OMNIROUTE_BASE_URL: ${OMNIROUTE_BASE_URL:-http://omniroute:20129}
+      MEM0_API_URL: ${MEM0_API_URL:-http://mem0-api:8000}
+      # Hermes's own chat interface token (Discord, upstream default).
+      HERMES_DISCORD_TOKEN: ${HERMES_DISCORD_TOKEN:-}
+    volumes:
+      # Configurable data dir (config.yaml, .env, state) — seeded by the
+      # installer and chowned to the image's fixed UID 10000.
+      - ${AGENTSTACK_DATA:-./data}/hermes:/opt/data
+      # The shipped, sanitized agents/skills starter pack (read-only).
+      - ${AGENTSTACK_AGENTS:-./stacks/core/hermes/agents}:/opt/data/agents:ro
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:9119:9119"
+    networks:
+      - agentstack
+
+networks:
+  agentstack:
+    external: true
+    name: agentstack

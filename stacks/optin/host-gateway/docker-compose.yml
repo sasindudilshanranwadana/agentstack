@@ -1,0 +1,44 @@
+name: host-gateway
+
+# ⚠️  OPT-IN / PRIVILEGED. host-gateway grants the agent tiered, token-gated
+# access to run commands on the host. OFF by default; the wizard requires
+# explicit consent before enabling it. Linux hosts only.
+#
+# This is agentstack's own component (MIT). Its source ships in the repo under
+# ./src/host-gateway and is built locally; it is never pulled from a registry.
+#
+# It runs privileged with pid: host because it uses nsenter to run approved
+# commands in the host's namespaces — that is the whole point of the component,
+# and the reason it is off by default and gated behind typed consent.
+
+services:
+  host-gateway:
+    build:
+      context: ${HOSTGW_SRC:-./src/host-gateway}
+    image: agentstack/host-gateway:local
+    container_name: host-gateway
+    restart: unless-stopped
+    privileged: true
+    pid: host
+    environment:
+      TZ: ${TZ:-UTC}
+    volumes:
+      # Token store + pending approvals (sensitive — not world-readable).
+      - ${AGENTSTACK_DATA:-./data}/host-gateway/state:/state
+      # Append-only, redacted audit log of every action.
+      - ${AGENTSTACK_DATA:-./data}/host-gateway/audit:/audit
+    # Loopback-only by default: reach it from the host or the agentstack network.
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:8781:8080"
+    networks:
+      - agentstack
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8080/health',timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  agentstack:
+    external: true
+    name: agentstack
