@@ -5,26 +5,10 @@
 <br/>
 
 [![CI](https://github.com/sasindudilshanranwadana/agentstack/actions/workflows/ci.yml/badge.svg)](https://github.com/sasindudilshanranwadana/agentstack/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-22d3ee.svg?style=flat-square)](LICENSE)
-[![Platforms](https://img.shields.io/badge/platforms-Linux%20·%20macOS%20·%20Windows-34d399?style=flat-square)](#requirements)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-a78bfa?style=flat-square&logo=python&logoColor=white)](#requirements)
-[![Made with Docker](https://img.shields.io/badge/Docker-Compose%20v2-fbbf24?style=flat-square&logo=docker&logoColor=white)](#requirements)
-
-### Self-hostable AI agent infrastructure — Hermes at the core, your stack, your keys.
-
-<br/>
-
-![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
-![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)
-![Ollama](https://img.shields.io/badge/Ollama-000000?logo=ollama&logoColor=white)
-![Anthropic](https://img.shields.io/badge/Anthropic-D97757?logo=anthropic&logoColor=white)
-![Gemini](https://img.shields.io/badge/Gemini-8E75B2?logo=googlegemini&logoColor=white)
-![OpenRouter](https://img.shields.io/badge/OpenRouter-6566F1?logo=openrouter&logoColor=white)
-![GitHub](https://img.shields.io/badge/GitHub-181717?logo=github&logoColor=white)
-![Nginx](https://img.shields.io/badge/Nginx-009639?logo=nginx&logoColor=white)
-![Netdata](https://img.shields.io/badge/Netdata-00AB44?logo=netdata&logoColor=white)
-![Telegram](https://img.shields.io/badge/Telegram-26A5E4?logo=telegram&logoColor=white)
-![Discord](https://img.shields.io/badge/Discord-5865F2?logo=discord&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/License-MIT-D97757?style=flat-square)](LICENSE)
+[![Platforms](https://img.shields.io/badge/platforms-Linux%20·%20macOS%20·%20Windows-BD5D3A?style=flat-square)](#requirements)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-8A8372?style=flat-square&logo=python&logoColor=white)](#requirements)
+[![Docker Compose v2](https://img.shields.io/badge/Docker-Compose%20v2-4C4840?style=flat-square&logo=docker&logoColor=white)](#requirements)
 
 <br/>
 
