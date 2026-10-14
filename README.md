@@ -89,16 +89,12 @@ lets you choose which pieces you want, and Docker Compose runs them together.
 
 ## Architecture
 
-<details>
-<summary><b>Full component map</b> — every tier, port, and wizard step (click to expand)</summary>
-
-<br/>
+Hermes sits at the hub; everything else is a ring you opt into — all on one
+private Docker network, with your keys living only in `.env`:
 
 <div align="center">
-<img src="docs/architecture.png" alt="agentstack architecture — Hermes orchestrating OmniRoute, mem0, MCP, inference, ingress and monitoring across tiers" width="100%">
+<img src="assets/architecture.svg" alt="agentstack architecture — the Hermes orchestrator hub with channels and ingress feeding in, OmniRoute routing to providers, mem0 shared memory, and a shelf of recommended and opt-in services on one Docker network" width="100%">
 </div>
-
-</details>
 
 ## Components
 
