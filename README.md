@@ -125,7 +125,8 @@ private Docker network, with your keys living only in `.env`:
 | | `mcp` | Tool pool (GitHub, Playwright, …) |
 | | `inference` | Local models (Ollama + Open WebUI) |
 | | `ingress` | Public entry + TLS (Nginx Proxy Manager) |
-| | `monitoring` | Netdata + Diun |
+| | `monitoring` | Netdata + Diun + a down-alert watchdog |
+| | `backup` | Daily verifiable backups (local + optional offsite) |
 | **Opt-in** ⚠ | `host-gateway` | Privileged, token-gated host access (Linux only) |
 | | `hexstrike` | Security tooling (authorized use only) |
 
@@ -140,6 +141,27 @@ Chosen in the wizard, not hardcoded:
 - **Notifications:** Telegram · Discord · Slack · Email · none
 - **LLM providers:** OpenAI · Anthropic · Google · OpenRouter · local (multi-select)
 - **Ingress:** domain + Let's Encrypt TLS · localhost only
+
+## Reliability: health, alerts & backups
+
+Self-hosting means *you* are on call, so agentstack ships the pieces that stop a
+failure from being silent:
+
+- **Health checks** on every long-running service (the orchestrator included), so
+  Docker — and the watchdog below — can tell a hung container from a healthy one.
+- **A down-alert watchdog** (part of `monitoring`): it watches the stack over the
+  Docker socket and messages you through your chosen notification channel the
+  moment a container goes **down or unhealthy**, and again when it recovers.
+  Netdata shows metrics and Diun flags image updates; the watchdog is the piece
+  that actually pages you when something breaks.
+- **Daily backups** (`backup`): a consistent Postgres dump, SQLite snapshots, and
+  archived data dirs, checksummed, pruned by retention, optionally copied offsite
+  with rclone, with success/failure alerts and a documented restore. Take one now
+  with `docker compose run --rm -e BACKUP_RUN_NOW=1 backup`. See
+  [stacks/recommended/backup/README.md](stacks/recommended/backup/README.md).
+
+All three are **on by default** (recommended tier) and need no external service —
+pick a notification channel in the wizard and the watchdog and backup use it.
 
 ## Requirements
 

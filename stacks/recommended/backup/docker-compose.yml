@@ -1,0 +1,44 @@
+name: backup
+
+# Backups — a daily, verifiable snapshot of your stack's state so a lost volume
+# isn't a lost everything. It dumps mem0's Postgres consistently, snapshots the
+# SQLite databases (OmniRoute, Open WebUI, Nginx Proxy Manager, …), archives the
+# data directories (skipping the regenerable ones), prunes by retention, and can
+# push a copy offsite with rclone. It alerts on success/failure through the same
+# notification channel the wizard configured. See README.md (incl. restore).
+#
+# SECURITY: like most backup tools, this needs read access to the Docker socket
+# (to run `pg_dump` inside the database container for a consistent dump). That is
+# broad access — review backup.sh, and see README.md for a socket-proxy option.
+
+services:
+  backup:
+    build:
+      context: ./stacks/recommended/backup
+    image: agentstack/backup:local
+    container_name: agentstack-backup
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-UTC}
+      BACKUP_HOUR: ${BACKUP_HOUR:-3}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-7}
+      RCLONE_REMOTE: ${RCLONE_REMOTE:-}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      # Reuses the wizard's notification channel (auto-detected).
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:-}
+      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${AGENTSTACK_DATA:-./data}:/data:ro
+      - ${AGENTSTACK_BACKUPS:-./backups}:/backups
+      # Put an rclone.conf here to enable offsite copies (see README.md).
+      - ${AGENTSTACK_DATA:-./data}/rclone:/root/.config/rclone
+    networks:
+      - agentstack
+
+networks:
+  agentstack:
+    external: true
+    name: agentstack

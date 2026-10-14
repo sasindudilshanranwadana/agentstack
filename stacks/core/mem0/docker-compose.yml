@@ -32,6 +32,13 @@ services:
     image: agentstack/mem0-api:local
     container_name: mem0-api
     restart: unless-stopped
+    healthcheck:
+      # mem0-api ships python but not curl; hit the FastAPI docs route.
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/docs',timeout=5)\""]
+      interval: 30s
+      timeout: 8s
+      retries: 5
+      start_period: 60s
     environment:
       TZ: ${TZ:-UTC}
       POSTGRES_HOST: postgres

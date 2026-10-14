@@ -18,6 +18,15 @@ services:
     # REPL (which exits with no TTY). This is the upstream-supported pattern.
     command: ["tail", "-f", "/dev/null"]
     stop_grace_period: 45s
+    healthcheck:
+      # Liveness of the orchestrator's dashboard port. Any HTTP response means
+      # the gateway is up; only a refused/timed-out connection fails. Generous
+      # start grace because Hermes boots its s6 services on first run.
+      test: ["CMD-SHELL", "curl -s -o /dev/null http://127.0.0.1:9119/"]
+      interval: 30s
+      timeout: 6s
+      retries: 6
+      start_period: 120s
     environment:
       TZ: ${TZ:-UTC}
       S6_KILL_GRACETIME: "30000"

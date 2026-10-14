@@ -9,6 +9,13 @@ services:
     image: ghcr.io/headroomlabs-ai/headroom:latest
     container_name: headroom
     restart: unless-stopped
+    healthcheck:
+      # Liveness of the compression proxy port — any HTTP response is healthy.
+      test: ["CMD-SHELL", "curl -s -o /dev/null http://127.0.0.1:8787/"]
+      interval: 30s
+      timeout: 6s
+      retries: 5
+      start_period: 45s
     environment:
       TZ: ${TZ:-UTC}
       HEADROOM_PORT: "8787"

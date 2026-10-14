@@ -1,7 +1,12 @@
 name: monitoring
 
-# Monitoring — Netdata for live metrics/health, Diun to notify when a container
-# image has an update. Both public images. See README.md for credit.
+# Monitoring — three layers:
+#   netdata   : live metrics + a dashboard (you look at it)
+#   diun      : notifies when a container IMAGE has an update
+#   watchdog  : the dead-man's-switch — alerts you when a container goes DOWN or
+#               UNHEALTHY, through the notification channel the wizard configured.
+# Netdata and Diun are public images; the watchdog is a small stdlib script
+# shipped in this repo (watchdog.py). See README.md for credit.
 
 services:
   netdata:
@@ -13,6 +18,12 @@ services:
       - SYS_PTRACE
     security_opt:
       - apparmor:unconfined
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:19999/api/v1/info >/dev/null"]
+      interval: 30s
+      timeout: 6s
+      retries: 5
+      start_period: 60s
     environment:
       TZ: ${TZ:-UTC}
     volumes:
@@ -41,6 +52,34 @@ services:
     volumes:
       - ${AGENTSTACK_DATA:-./data}/diun:/data
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - agentstack
+
+  # The dead-man's-switch: alerts when any agentstack container goes down or
+  # unhealthy. Stdlib Python on a slim base, with the watchdog script mounted
+  # read-only and read-only access to the docker socket. It auto-detects the
+  # notification channel from whichever of the env vars below the wizard filled.
+  watchdog:
+    image: python:3.12-slim
+    container_name: agentstack-watchdog
+    restart: unless-stopped
+    command: ["python", "-u", "/app/watchdog.py"]
+    environment:
+      TZ: ${TZ:-UTC}
+      WATCHDOG_NETWORK: agentstack
+      WATCHDOG_INTERVAL: ${WATCHDOG_INTERVAL:-30}
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:-}
+      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_TO: ${SMTP_TO:-}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./stacks/recommended/monitoring/watchdog.py:/app/watchdog.py:ro
     networks:
       - agentstack
 

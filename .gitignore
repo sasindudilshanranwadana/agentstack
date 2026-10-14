@@ -15,3 +15,6 @@ docs/superpowers/
 
 # Owner-specific private sanitization markers (never ship these names publicly)
 tests/private-markers.txt
+
+# backup module output
+/backups/
