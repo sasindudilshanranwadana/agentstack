@@ -14,6 +14,19 @@
 
 <br/>
 
+![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)
+![Ollama](https://img.shields.io/badge/Ollama-000000?logo=ollama&logoColor=white)
+![Anthropic](https://img.shields.io/badge/Anthropic-D97757?logo=anthropic&logoColor=white)
+![Gemini](https://img.shields.io/badge/Gemini-8E75B2?logo=googlegemini&logoColor=white)
+![GitHub](https://img.shields.io/badge/GitHub-181717?logo=github&logoColor=white)
+![Nginx](https://img.shields.io/badge/Nginx-009639?logo=nginx&logoColor=white)
+![Netdata](https://img.shields.io/badge/Netdata-00AB44?logo=netdata&logoColor=white)
+![Telegram](https://img.shields.io/badge/Telegram-26A5E4?logo=telegram&logoColor=white)
+![Discord](https://img.shields.io/badge/Discord-5865F2?logo=discord&logoColor=white)
+
+<br/>
+
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Donate-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://ko-fi.com/sasiverse)
 
 </div>
@@ -44,7 +57,20 @@ The wizard walks you through: **pick components → consent for anything
 privileged → choose integrations → enter your keys** (written only to a local,
 git-ignored `.env`) → it brings up exactly what you selected.
 
+## The stack at a glance
+
+Real tools, your choice — Hermes orchestrates, and you pick what you want in the
+wizard. (OpenAI, OpenRouter and Slack are shown as monograms; their logos are
+not redistributable.)
+
+<div align="center">
+<img src="assets/stack.svg" alt="agentstack component gallery with tool logos, grouped by tier" width="100%">
+</div>
+
 ## Architecture
+
+How it fits together — providers flow into OmniRoute, Hermes orchestrates, mem0
+remembers, and your selected tools hang off the shared network:
 
 <div align="center">
 <img src="docs/architecture.png" alt="agentstack architecture — Hermes orchestrating OmniRoute, mem0, MCP, inference, ingress and monitoring across tiers" width="100%">

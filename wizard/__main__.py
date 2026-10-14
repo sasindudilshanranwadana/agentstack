@@ -7,8 +7,10 @@ tested pure logic in components/integrations/envgen/plan. Writes a git-ignored
 
 from __future__ import annotations
 
+import itertools
 import os
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -22,16 +24,67 @@ from wizard.preflight import detect_platform, preflight
 
 REPO = Path(__file__).resolve().parent.parent
 
+# ---- terminal styling (ANSI, only emitted to a real TTY) ----
+_TTY = sys.stdout.isatty()
+_CYAN, _VIOLET, _GREEN, _AMBER, _DIM, _BOLD = "96", "95", "92", "93", "2", "1"
+
+
+def _c(code: str, text: str) -> str:
+    return f"\x1b[{code}m{text}\x1b[0m" if _TTY else text
+
+
+class _Spinner:
+    """A tiny braille spinner for a step; a plain line when not a TTY."""
+
+    _FRAMES = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
+
+    def __init__(self, label: str) -> None:
+        self.label = label
+        self._stop = threading.Event()
+        self._thread: threading.Thread | None = None
+
+    def __enter__(self) -> "_Spinner":
+        if _TTY:
+            self._thread = threading.Thread(target=self._spin, daemon=True)
+            self._thread.start()
+        else:
+            print(f"  {self.label} ...")
+        return self
+
+    def _spin(self) -> None:
+        for frame in itertools.cycle(self._FRAMES):
+            if self._stop.is_set():
+                break
+            sys.stdout.write(f"\r  {_c(_CYAN, frame)} {self.label}")
+            sys.stdout.flush()
+            time.sleep(0.08)
+
+    def __exit__(self, *exc: object) -> None:
+        self._stop.set()
+        if self._thread:
+            self._thread.join(timeout=0.3)
+        if _TTY:
+            sys.stdout.write(f"\r  {_c(_GREEN, '✓')} {self.label}\n")
+            sys.stdout.flush()
+
 
 def _animate_banner() -> None:
-    if not sys.stdout.isatty():
+    if not _TTY:
         print(banner.render_banner())
         return
+    # Two-tone sweep reveal of the wordmark, line by line.
     for frame in banner.FRAMES:
-        sys.stdout.write("\x1b[2J\x1b[H" + frame + "\n")
+        sys.stdout.write("\x1b[2J\x1b[H" + _c(_CYAN, frame) + "\n")
         sys.stdout.flush()
-        time.sleep(0.12)
-    print("\n    " + banner.TAGLINE + "\n    " + banner.CREDIT + "\n")
+        time.sleep(0.09)
+    # Typewriter tagline, then the credit.
+    sys.stdout.write("\n    ")
+    for ch in banner.TAGLINE:
+        sys.stdout.write(_c(_BOLD, ch))
+        sys.stdout.flush()
+        time.sleep(0.008)
+    sys.stdout.write("\n    " + _c(_DIM, banner.CREDIT) + "\n\n")
+    sys.stdout.flush()
 
 
 def _ask_yes(prompt: str, default: bool = True) -> bool:
@@ -57,9 +110,9 @@ def _choose(prompt: str, options: tuple[str, ...], default: str) -> str:
 def _select_components() -> tuple[list[str], list[str]]:
     selected: list[str] = []
     consented: list[str] = []
-    print("\nCore (always installed): " + ", ".join(sorted(CORE_IDS)))
+    print("\n" + _c(_CYAN, "Core (always installed): ") + ", ".join(sorted(CORE_IDS)))
     for tier in ("recommended", "optin"):
-        print(f"\n{tier.upper()} components:")
+        print("\n" + _c(_BOLD, f"{tier.upper()} components:"))
         for cid, comp in COMPONENTS.items():
             if comp.tier != tier:
                 continue
@@ -115,13 +168,14 @@ def _write_env(path: Path, content: str) -> None:
 def run() -> int:
     _animate_banner()
     platform = detect_platform()
-    print(f"Platform detected: {platform}")
+    print(f"  {_c(_GREEN, '✓')} platform detected: {_c(_BOLD, platform)}")
 
-    issues = preflight()
+    with _Spinner("checking prerequisites (docker, compose)"):
+        issues = preflight()
     if issues:
-        print("\nPreflight found problems:")
+        print(_c(_AMBER, "\nPreflight found problems:"))
         for i in issues:
-            print(f"  - {i}")
+            print(f"  {_c(_AMBER, '✗')} {i}")
         print("\nFix these and re-run. Aborting.")
         return 1
 
@@ -143,7 +197,7 @@ def run() -> int:
         platform=platform,
     )
 
-    print("\nPlanned components: " + ", ".join(sorted(plan.components)))
+    print("\n" + _c(_GREEN, "✓ planned components: ") + ", ".join(sorted(plan.components)))
     print("Compose files:")
     for f in plan.compose_files:
         print(f"  - {f}")
@@ -154,8 +208,8 @@ def run() -> int:
     lines.append("")
     lines.append("COMPOSE_FILE=" + ":".join(plan.compose_files))
     _write_env(env_path, "\n".join(lines) + "\n")
-    print(f"\nWrote {env_path} (fill in the blank keys before starting).")
-    print("Then run:  scripts/up.sh   (or: docker compose up -d)")
+    print(f"\n{_c(_GREEN, '✓')} wrote {_c(_BOLD, str(env_path))} (fill in the blank keys before starting).")
+    print("Then run:  " + _c(_CYAN, "scripts/up.sh") + "   (or: docker compose up -d)")
 
     unverified = unverified_credits()
     if unverified:
