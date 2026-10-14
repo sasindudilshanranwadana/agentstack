@@ -19,6 +19,7 @@
 ![Ollama](https://img.shields.io/badge/Ollama-000000?logo=ollama&logoColor=white)
 ![Anthropic](https://img.shields.io/badge/Anthropic-D97757?logo=anthropic&logoColor=white)
 ![Gemini](https://img.shields.io/badge/Gemini-8E75B2?logo=googlegemini&logoColor=white)
+![OpenRouter](https://img.shields.io/badge/OpenRouter-6566F1?logo=openrouter&logoColor=white)
 ![GitHub](https://img.shields.io/badge/GitHub-181717?logo=github&logoColor=white)
 ![Nginx](https://img.shields.io/badge/Nginx-009639?logo=nginx&logoColor=white)
 ![Netdata](https://img.shields.io/badge/Netdata-00AB44?logo=netdata&logoColor=white)
@@ -60,8 +61,10 @@ git-ignored `.env`) → it brings up exactly what you selected.
 ## The stack at a glance
 
 Real tools, your choice — Hermes orchestrates, and you pick what you want in the
-wizard. (OpenAI, OpenRouter and Slack are shown as monograms; their logos are
-not redistributable.)
+wizard. These are the real brand marks wherever one exists. **OpenAI** and
+**Slack** use a monogram (their marks are trademark-restricted), and **Hermes**,
+**OmniRoute**, **Headroom** and **host-gateway** have no official logo — Hermes
+carries a purpose-drawn orchestrator emblem.
 
 <div align="center">
 <img src="assets/stack.svg" alt="agentstack component gallery with tool logos, grouped by tier" width="100%">
