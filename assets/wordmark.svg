@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="160" viewBox="0 0 640 160" fill="none">
+  <defs>
+    <linearGradient id="word" x1="348" y1="39" x2="606" y2="113" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#22d3ee"/><stop offset="1" stop-color="#a78bfa"/>
+    </linearGradient>
+  </defs>
+  <text x="16" y="112" font-family="ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="86" font-weight="700" letter-spacing="-6" fill="#f8fafc">agent</text>
+  <text x="273" y="112" font-family="ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace" font-size="86" font-weight="700" letter-spacing="-6" fill="url(#word)">stack</text>
+</svg>
